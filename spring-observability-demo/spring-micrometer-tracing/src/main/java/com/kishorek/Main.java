@@ -37,6 +37,8 @@ public class Main {
     @RequestMapping("/echo")
     public Map<String, Object> echo(@RequestParam Map<String, String> allRequestParams, @RequestHeader Map<String, String> allRequestHeaders, HttpServletRequest request) {
         log.info("Echo Key is used to summon an \"echo\" of a dead person to the Wellhouse");
+        // prints: Baggage: null
+        log.info("Baggage: {}", tracer.createBaggage("A", "B").makeCurrent().get());
         Map<String, Object> response = new HashMap<>();
         response.put("headers", allRequestHeaders);
         response.put("parameters", allRequestParams);
