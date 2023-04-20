@@ -2,6 +2,7 @@ package com.kishorek;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.BaggageInScope;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +41,17 @@ public class Main {
         log.info("Echo Key is used to summon an \"echo\" of a dead person to the Wellhouse");
         // prints: Baggage: null
         log.info("Baggage: {}", tracer.createBaggage("A", "B").makeCurrent().get());
+
+      Span span = this.tracer.nextSpan();
+      try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
+        try (BaggageInScope baggage = this.tracer.createBaggage("mybaggage", "my-baggage-value").makeCurrent()) {
+          log.info("<ACCEPTANCE_TEST> <TRACE:{}> Hello from consumer",
+              this.tracer.currentSpan().context().traceId());
+          // prints: <BAGGAGE VALUE: null> Baggage is set
+          log.info("<BAGGAGE VALUE: {}> Baggage is set", baggage.get());
+        }
+      }
+
         Map<String, Object> response = new HashMap<>();
         response.put("headers", allRequestHeaders);
         response.put("parameters", allRequestParams);
